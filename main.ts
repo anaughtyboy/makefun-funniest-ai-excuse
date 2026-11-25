@@ -8,8 +8,12 @@ import { join } from "node:path";
 const EXCUSE =
   "Sorry I'm late, my neural network had a 404 error finding motivation.";
 
+// The gate: 1 to 200 characters, not only white space.
 const MIN_CHARS = 1;
 const MAX_CHARS = 200;
+
+// Bytes that must never appear inside the single line.
+const FORBIDDEN_BYTES = [0x0a, 0x0d];
 
 function checkLine(line: string): void {
   if (line.length < MIN_CHARS || line.length > MAX_CHARS) {
@@ -22,6 +26,11 @@ function checkLine(line: string): void {
   }
   if (/\r|\n/.test(line)) {
     throw new Error("excuse must be a single line");
+  }
+  for (const byte of Buffer.from(line, "utf8")) {
+    if (FORBIDDEN_BYTES.includes(byte)) {
+      throw new Error("excuse must not contain a newline byte");
+    }
   }
   for (const ch of line) {
     if (ch.charCodeAt(0) < 0x20 || ch.charCodeAt(0) === 0x7f) {
